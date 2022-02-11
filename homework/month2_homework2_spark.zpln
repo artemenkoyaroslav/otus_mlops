@@ -1,0 +1,910 @@
+﻿{
+  "paragraphs": [
+    {
+      "text": "// Работа с большими данными на Apache Spark\n\n// Цель:\n// В данном проекте вы отработаете основные этапы работы с данными с помощью Spark на примере датасета показов ленты социальной сети ok.ru. Полученный код предобработки и проведенный анализ датасета будет необходим для выполнения последующих домашних заданий.\n\n// Описание/Пошаговая инструкция выполнения домашнего задания:\n// Создать проект на спарке для подсчета набора относительно простых статистик по некоторому датасету (предположительно SNA Hackathon 2019). Надо найти топы популярных для каждого типа обьекта, построить гистограммы популярности/активности, посчитать корреляцию признаков с целевой переменной. \n\n// Ознакомьтесь с задачей и описанием датасета\n// https://www.kaggle.com/sharthz23/sna-hackathon-2019-collaboration\n\n// Скачайте датасет\n// https://www.kaggle.com/sharthz23/sna-hackathon-2019-collaboration/download\n\n// Используя Spark:\n\n// Постройте топ популярных групп для каждого типа обьекта\n// Построите гистограммы популярности/активности по времени суток\n// Посчитайте корреляцию признаков с целевой переменной\n// Найдите другие интересные инсайты в данных :)\n// Критерии оценки:\n// Построен топ групп\n// Построены гистограммы популярности/активности групп на портале по времени суток\n// Посчитана корреляция признаков с целью\n// За каждый дополнительный интересный вывод ,построенный на данных датасета\n",
+      "user": "anonymous",
+      "dateUpdated": "2022-02-08T13:26:38+0300",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/scala",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1643979357967_976638805",
+      "id": "paragraph_1643979357967_976638805",
+      "dateCreated": "2022-02-04T15:55:57+0300",
+      "dateStarted": "2022-02-08T13:26:38+0300",
+      "dateFinished": "2022-02-08T13:26:52+0300",
+      "status": "FINISHED",
+      "focus": true,
+      "$$hashKey": "object:78136"
+    },
+    {
+      "title": "Read Data",
+      "text": "import org.apache.spark.sql._\n\nval spark = SparkSession\n                .builder()\n                .master(\"local[*]\")\n                .appName(\"Hello Spark\")\n                .getOrCreate()\n                \nval df = spark.read.parquet(\"/Users/a16683378/Desktop/MLOps-Otus/2 месяц/8. Основы Apache Spark 1/archive/train\") \n\ndf.printSchema",
+      "user": "anonymous",
+      "dateUpdated": "2022-02-10T16:10:01+0300",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/scala",
+        "fontSize": 9,
+        "title": true,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "root\n |-- instanceId_userId: integer (nullable = true)\n |-- instanceId_objectType: string (nullable = true)\n |-- instanceId_objectId: integer (nullable = true)\n |-- audit_pos: long (nullable = true)\n |-- audit_clientType: string (nullable = true)\n |-- audit_timestamp: long (nullable = true)\n |-- audit_timePassed: long (nullable = true)\n |-- audit_experiment: string (nullable = true)\n |-- audit_resourceType: long (nullable = true)\n |-- metadata_ownerId: integer (nullable = true)\n |-- metadata_ownerType: string (nullable = true)\n |-- metadata_createdAt: long (nullable = true)\n |-- metadata_authorId: integer (nullable = true)\n |-- metadata_applicationId: long (nullable = true)\n |-- metadata_numCompanions: integer (nullable = true)\n |-- metadata_numPhotos: integer (nullable = true)\n |-- metadata_numPolls: integer (nullable = true)\n |-- metadata_numSymbols: integer (nullable = true)\n |-- metadata_numTokens: integer (nullable = true)\n |-- metadata_numVideos: integer (nullable = true)\n |-- metadata_platform: string (nullable = true)\n |-- metadata_totalVideoLength: integer (nullable = true)\n |-- metadata_options: array (nullable = true)\n |    |-- element: string (containsNull = true)\n |-- relationsMask: long (nullable = true)\n |-- userOwnerCounters_USER_FEED_REMOVE: double (nullable = true)\n |-- userOwnerCounters_USER_PROFILE_VIEW: double (nullable = true)\n |-- userOwnerCounters_VOTE_POLL: double (nullable = true)\n |-- userOwnerCounters_USER_SEND_MESSAGE: double (nullable = true)\n |-- userOwnerCounters_USER_DELETE_MESSAGE: double (nullable = true)\n |-- userOwnerCounters_USER_INTERNAL_LIKE: double (nullable = true)\n |-- userOwnerCounters_USER_INTERNAL_UNLIKE: double (nullable = true)\n |-- userOwnerCounters_USER_STATUS_COMMENT_CREATE: double (nullable = true)\n |-- userOwnerCounters_PHOTO_COMMENT_CREATE: double (nullable = true)\n |-- userOwnerCounters_MOVIE_COMMENT_CREATE: double (nullable = true)\n |-- userOwnerCounters_USER_PHOTO_ALBUM_COMMENT_CREATE: double (nullable = true)\n |-- userOwnerCounters_COMMENT_INTERNAL_LIKE: double (nullable = true)\n |-- userOwnerCounters_USER_FORUM_MESSAGE_CREATE: double (nullable = true)\n |-- userOwnerCounters_PHOTO_MARK_CREATE: double (nullable = true)\n |-- userOwnerCounters_PHOTO_VIEW: double (nullable = true)\n |-- userOwnerCounters_PHOTO_PIN_BATCH_CREATE: double (nullable = true)\n |-- userOwnerCounters_PHOTO_PIN_UPDATE: double (nullable = true)\n |-- userOwnerCounters_USER_PRESENT_SEND: double (nullable = true)\n |-- userOwnerCounters_UNKNOWN: double (nullable = true)\n |-- userOwnerCounters_CREATE_TOPIC: double (nullable = true)\n |-- userOwnerCounters_CREATE_IMAGE: double (nullable = true)\n |-- userOwnerCounters_CREATE_MOVIE: double (nullable = true)\n |-- userOwnerCounters_CREATE_COMMENT: double (nullable = true)\n |-- userOwnerCounters_CREATE_LIKE: double (nullable = true)\n |-- userOwnerCounters_TEXT: double (nullable = true)\n |-- userOwnerCounters_IMAGE: double (nullable = true)\n |-- userOwnerCounters_VIDEO: double (nullable = true)\n |-- ownerUserCounters_USER_FEED_REMOVE: double (nullable = true)\n |-- ownerUserCounters_USER_PROFILE_VIEW: double (nullable = true)\n |-- ownerUserCounters_VOTE_POLL: double (nullable = true)\n |-- ownerUserCounters_USER_SEND_MESSAGE: double (nullable = true)\n |-- ownerUserCounters_USER_DELETE_MESSAGE: double (nullable = true)\n |-- ownerUserCounters_USER_INTERNAL_LIKE: double (nullable = true)\n |-- ownerUserCounters_USER_INTERNAL_UNLIKE: double (nullable = true)\n |-- ownerUserCounters_USER_STATUS_COMMENT_CREATE: double (nullable = true)\n |-- ownerUserCounters_PHOTO_COMMENT_CREATE: double (nullable = true)\n |-- ownerUserCounters_MOVIE_COMMENT_CREATE: double (nullable = true)\n |-- ownerUserCounters_USER_PHOTO_ALBUM_COMMENT_CREATE: double (nullable = true)\n |-- ownerUserCounters_COMMENT_INTERNAL_LIKE: double (nullable = true)\n |-- ownerUserCounters_USER_FORUM_MESSAGE_CREATE: double (nullable = true)\n |-- ownerUserCounters_PHOTO_MARK_CREATE: double (nullable = true)\n |-- ownerUserCounters_PHOTO_VIEW: double (nullable = true)\n |-- ownerUserCounters_PHOTO_PIN_BATCH_CREATE: double (nullable = true)\n |-- ownerUserCounters_PHOTO_PIN_UPDATE: double (nullable = true)\n |-- ownerUserCounters_USER_PRESENT_SEND: double (nullable = true)\n |-- ownerUserCounters_UNKNOWN: double (nullable = true)\n |-- ownerUserCounters_CREATE_TOPIC: double (nullable = true)\n |-- ownerUserCounters_CREATE_IMAGE: double (nullable = true)\n |-- ownerUserCounters_CREATE_MOVIE: double (nullable = true)\n |-- ownerUserCounters_CREATE_COMMENT: double (nullable = true)\n |-- ownerUserCounters_CREATE_LIKE: double (nullable = true)\n |-- ownerUserCounters_TEXT: double (nullable = true)\n |-- ownerUserCounters_IMAGE: double (nullable = true)\n |-- ownerUserCounters_VIDEO: double (nullable = true)\n |-- membership_status: string (nullable = true)\n |-- membership_statusUpdateDate: long (nullable = true)\n |-- membership_joinDate: long (nullable = true)\n |-- membership_joinRequestDate: long (nullable = true)\n |-- owner_create_date: long (nullable = true)\n |-- owner_birth_date: integer (nullable = true)\n |-- owner_gender: integer (nullable = true)\n |-- owner_status: integer (nullable = true)\n |-- owner_ID_country: long (nullable = true)\n |-- owner_ID_Location: integer (nullable = true)\n |-- owner_is_active: integer (nullable = true)\n |-- owner_is_deleted: integer (nullable = true)\n |-- owner_is_abused: integer (nullable = true)\n |-- owner_is_activated: integer (nullable = true)\n |-- owner_change_datime: long (nullable = true)\n |-- owner_is_semiactivated: integer (nullable = true)\n |-- owner_region: integer (nullable = true)\n |-- user_create_date: long (nullable = true)\n |-- user_birth_date: integer (nullable = true)\n |-- user_gender: integer (nullable = true)\n |-- user_status: integer (nullable = true)\n |-- user_ID_country: long (nullable = true)\n |-- user_ID_Location: integer (nullable = true)\n |-- user_is_active: integer (nullable = true)\n |-- user_is_deleted: integer (nullable = true)\n |-- user_is_abused: integer (nullable = true)\n |-- user_is_activated: integer (nullable = true)\n |-- user_change_datime: long (nullable = true)\n |-- user_is_semiactivated: integer (nullable = true)\n |-- user_region: integer (nullable = true)\n |-- feedback: array (nullable = true)\n |    |-- element: string (containsNull = true)\n |-- objectId: integer (nullable = true)\n |-- auditweights_ageMs: double (nullable = true)\n |-- auditweights_closed: double (nullable = true)\n |-- auditweights_ctr_gender: double (nullable = true)\n |-- auditweights_ctr_high: double (nullable = true)\n |-- auditweights_ctr_negative: double (nullable = true)\n |-- auditweights_dailyRecency: double (nullable = true)\n |-- auditweights_feedOwner_RECOMMENDED_GROUP: double (nullable = true)\n |-- auditweights_feedStats: double (nullable = true)\n |-- auditweights_friendCommentFeeds: double (nullable = true)\n |-- auditweights_friendCommenters: double (nullable = true)\n |-- auditweights_friendLikes: double (nullable = true)\n |-- auditweights_friendLikes_actors: double (nullable = true)\n |-- auditweights_hasDetectedText: double (nullable = true)\n |-- auditweights_hasText: double (nullable = true)\n |-- auditweights_isPymk: double (nullable = true)\n |-- auditweights_isRandom: double (nullable = true)\n |-- auditweights_likersFeedStats_hyper: double (nullable = true)\n |-- auditweights_likersSvd_prelaunch_hyper: double (nullable = true)\n |-- auditweights_matrix: double (nullable = true)\n |-- auditweights_notOriginalPhoto: double (nullable = true)\n |-- auditweights_numDislikes: double (nullable = true)\n |-- auditweights_numLikes: double (nullable = true)\n |-- auditweights_numShows: double (nullable = true)\n |-- auditweights_onlineVideo: double (nullable = true)\n |-- auditweights_partAge: double (nullable = true)\n |-- auditweights_partCtr: double (nullable = true)\n |-- auditweights_partSvd: double (nullable = true)\n |-- auditweights_processedVideo: double (nullable = true)\n |-- auditweights_relationMasks: double (nullable = true)\n |-- auditweights_source_LIVE_TOP: double (nullable = true)\n |-- auditweights_source_MOVIE_TOP: double (nullable = true)\n |-- auditweights_svd_prelaunch: double (nullable = true)\n |-- auditweights_svd_spark: double (nullable = true)\n |-- auditweights_userAge: double (nullable = true)\n |-- auditweights_userOwner_CREATE_COMMENT: double (nullable = true)\n |-- auditweights_userOwner_CREATE_IMAGE: double (nullable = true)\n |-- auditweights_userOwner_CREATE_LIKE: double (nullable = true)\n |-- auditweights_userOwner_IMAGE: double (nullable = true)\n |-- auditweights_userOwner_MOVIE_COMMENT_CREATE: double (nullable = true)\n |-- auditweights_userOwner_PHOTO_COMMENT_CREATE: double (nullable = true)\n |-- auditweights_userOwner_PHOTO_MARK_CREATE: double (nullable = true)\n |-- auditweights_userOwner_PHOTO_VIEW: double (nullable = true)\n |-- auditweights_userOwner_TEXT: double (nullable = true)\n |-- auditweights_userOwner_UNKNOWN: double (nullable = true)\n |-- auditweights_userOwner_USER_DELETE_MESSAGE: double (nullable = true)\n |-- auditweights_userOwner_USER_FEED_REMOVE: double (nullable = true)\n |-- auditweights_userOwner_USER_FORUM_MESSAGE_CREATE: double (nullable = true)\n |-- auditweights_userOwner_USER_INTERNAL_LIKE: double (nullable = true)\n |-- auditweights_userOwner_USER_INTERNAL_UNLIKE: double (nullable = true)\n |-- auditweights_userOwner_USER_PRESENT_SEND: double (nullable = true)\n |-- auditweights_userOwner_USER_PROFILE_VIEW: double (nullable = true)\n |-- auditweights_userOwner_USER_SEND_MESSAGE: double (nullable = true)\n |-- auditweights_userOwner_USER_STATUS_COMMENT_CREATE: double (nullable = true)\n |-- auditweights_userOwner_VIDEO: double (nullable = true)\n |-- auditweights_userOwner_VOTE_POLL: double (nullable = true)\n |-- auditweights_x_ActorsRelations: long (nullable = true)\n |-- auditweights_likersSvd_spark_hyper: double (nullable = true)\n |-- auditweights_source_PROMO: double (nullable = true)\n |-- date: date (nullable = true)\n\nimport org.apache.spark.sql._\n\u001b[1m\u001b[34mspark\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.SparkSession\u001b[0m = org.apache.spark.sql.SparkSession@53f4e31d\n\u001b[1m\u001b[34mdf\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [instanceId_userId: int, instanceId_objectType: string ... 167 more fields]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://10.9.140.245:4043/jobs/job?id=290",
+              "$$hashKey": "object:78645"
+            },
+            {
+              "jobUrl": "http://10.9.140.245:4043/jobs/job?id=291",
+              "$$hashKey": "object:78646"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1643979789527_676861262",
+      "id": "paragraph_1643979789527_676861262",
+      "dateCreated": "2022-02-04T16:03:09+0300",
+      "dateStarted": "2022-02-10T16:10:01+0300",
+      "dateFinished": "2022-02-10T16:10:03+0300",
+      "status": "FINISHED",
+      "$$hashKey": "object:78137"
+    },
+    {
+      "text": "// instanceId_userId — идентификатор пользователя (анонимизированный)\n\n// instanceId_objectType — тип объекта\n\n// instanceId_objectId — идентификатор объекта (анонимизированный)\n\n// feedback — массив с типами реакций пользователя (наличие в массиве токена Liked говорит о том, что объект получил «класс» от пользователя)\n\n// audit_clientType — тип платформы, с которой зашёл пользователь\n\n// audit_timestamp — время, когда строилась лента\n\n// metadata_ownerId — автор показанного объекта (анонимизированный)\n\n// metadata_createdAt — дата создания показанного объекта\n\n// audit_* — расширенная информация о контексте построения ленты\n\n// metadata_* — расширенная информация о самом объекте\n\n// userOwnerCounters_* — информация о предыдущих взаимодействиях пользователя и автора контента\n\n// ownerUserCounters_* — информация о предыдущих взаимодействиях автора контента и пользователя\n\n// membership_* — информация о членстве пользователя в группе, где опубликован контент\n\n// user_* — подробная информация о пользователе;\n\n// auditweights_* — большое количество runtime-признаков, извлечённых текущей системой\n",
+      "user": "anonymous",
+      "dateUpdated": "2022-02-07T19:16:23+0300",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/scala",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1643981290743_163059977",
+      "id": "paragraph_1643981290743_163059977",
+      "dateCreated": "2022-02-04T16:28:10+0300",
+      "dateStarted": "2022-02-07T19:16:23+0300",
+      "dateFinished": "2022-02-07T19:16:23+0300",
+      "status": "FINISHED",
+      "$$hashKey": "object:78138"
+    },
+    {
+      "text": "import org.apache.spark.sql.expressions.Window\nimport org.apache.spark.sql.functions.{from_unixtime, unix_timestamp, _}\n\nval df_liked = df.filter(array_contains(col(\"feedback\"),\"Liked\")) // датафрейм - содержат Liked\n\ndf_liked.createOrReplaceTempView(\"TableLiked\") //алиас для лайкнутых\n\nval windowSpec  = Window.partitionBy(\"instanceId_objectType\").orderBy(desc(\"count\")) // для оконки\n\nval df_ranked = df_liked.groupBy(\"instanceId_objectType\", \"instanceId_objectId\").count().withColumn(\"rank\",rank().over(windowSpec)) // датафрейм - ранжированы по лайкам\n\nval df_hh_activity = df_liked.select(from_unixtime(col(\"audit_timestamp\")/1000, \"HH\").cast(\"int\").as(\"HH24\")).groupBy(\"HH24\").count() // актиыность по времени суток\n\ndf_hh_activity.createOrReplaceTempView(\"TableHHActivity\") //алиас для лайкнутых\n\ndf_ranked.createOrReplaceTempView(\"TableRanked\") // алисас на ранжированных\n\nval df_y = df.withColumn(\"Y\", when(array_contains(col(\"feedback\"),\"Liked\"), 1).otherwise(0)).select(\"Y\") // целевая переменная \n\nval df_with_y = df.withColumn(\"Y\", when(array_contains(col(\"feedback\"),\"Liked\"), 1).otherwise(0)) // датафрем + целевая переменная (1 - true, 0 - false)\n\ndf_with_y.createOrReplaceTempView(\"TableWithY\") // алисас на ранжированных",
+      "user": "anonymous",
+      "dateUpdated": "2022-02-10T16:10:19+0300",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/scala",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "import org.apache.spark.sql.expressions.Window\nimport org.apache.spark.sql.functions.{from_unixtime, unix_timestamp, _}\n\u001b[1m\u001b[34mdf_liked\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.Dataset[org.apache.spark.sql.Row]\u001b[0m = [instanceId_userId: int, instanceId_objectType: string ... 167 more fields]\n\u001b[1m\u001b[34mwindowSpec\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.expressions.WindowSpec\u001b[0m = org.apache.spark.sql.expressions.WindowSpec@4434886a\n\u001b[1m\u001b[34mdf_ranked\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [instanceId_objectType: string, instanceId_objectId: int ... 2 more fields]\n\u001b[1m\u001b[34mdf_hh_activity\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [HH24: int, count: bigint]\n\u001b[1m\u001b[34mdf_y\u001b[0m: \u001b[1m\u001b[32morg.apache.spark.sql.DataFrame\u001b[0m = [Y: int]\n\u001b[1m\u001b[34mdf_with_y\u001b[0m: \u001b[1m\u001b[32morg.apache.spark..."
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1644250904652_1533716693",
+      "id": "paragraph_1644250904652_1533716693",
+      "dateCreated": "2022-02-07T19:21:44+0300",
+      "dateStarted": "2022-02-10T16:10:19+0300",
+      "dateFinished": "2022-02-10T16:10:19+0300",
+      "status": "FINISHED",
+      "$$hashKey": "object:78139"
+    },
+    {
+      "user": "anonymous",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/scala",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1644510952275_1299393608",
+      "id": "paragraph_1644510952275_1299393608",
+      "dateCreated": "2022-02-10T19:35:52+0300",
+      "status": "READY",
+      "focus": true,
+      "$$hashKey": "object:130898",
+      "text": "import scala.collection.mutable.ListBuffer\nimport org.apache.spark.ml.stat.Correlation\n\nvar corr = 0.0\nvar colList = new ListBuffer[String]()\nvar corrList = new ListBuffer[Double]()\n\nfor (x <- df.columns.toSeq) {\n    if (df.schema(x).dataType.toString() == \"DoubleType\" | df.schema(x).dataType.toString() == \"IntegerType\") { // берем только численные типы\n        if ((x contains \"Id\") != true) {\n            numbColumns +=x\n            corr = df_with_y.limit(10).stat.corr(x, \"Y\")\n            println(corr)\n            if (corr.isNaN == false) {\n                colList += x\n                corrList += corr\n                println(\"done\")\n                \n            }\n        }\n    }\n}\n\nvar df_corr = (colList zip corrList).toDF(\"col\",\"corr\")\n\ndf_corr.createOrReplaceTempView(\"TableCorr\") // алисас на матрицу корреляций",
+      "dateUpdated": "2022-02-11T16:04:22+0300"
+    },
+    {
+      "title": "TOP популярных групп для каждого типа объекта",
+      "text": "%spark.sql\nSELECT *\n  FROM TableRanked \n where rank <= 10",
+      "user": "anonymous",
+      "dateUpdated": "2022-02-11T16:08:09+0300",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/sql",
+        "fontSize": 9,
+        "results": {
+          "0": {
+            "graph": {
+              "mode": "scatterChart",
+              "height": 300,
+              "optionOpen": false,
+              "setting": {
+                "table": {
+                  "tableGridState": {
+                    "columns": [
+                      {
+                        "name": "instanceId_objectType0",
+                        "visible": true,
+                        "width": "*",
+                        "sort": {},
+                        "filters": [
+                          {}
+                        ],
+                        "pinned": ""
+                      },
+                      {
+                        "name": "instanceId_objectId1",
+                        "visible": true,
+                        "width": "*",
+                        "sort": {},
+                        "filters": [
+                          {}
+                        ],
+                        "pinned": ""
+                      },
+                      {
+                        "name": "count2",
+                        "visible": true,
+                        "width": "*",
+                        "sort": {},
+                        "filters": [
+                          {}
+                        ],
+                        "pinned": ""
+                      },
+                      {
+                        "name": "rank3",
+                        "visible": true,
+                        "width": "*",
+                        "sort": {
+                          "priority": 0,
+                          "direction": "asc"
+                        },
+                        "filters": [
+                          {}
+                        ],
+                        "pinned": ""
+                      }
+                    ],
+                    "scrollFocus": {},
+                    "selection": [],
+                    "grouping": {
+                      "grouping": [],
+                      "aggregations": [],
+                      "rowExpandedStates": {}
+                    },
+                    "treeView": {},
+                    "pagination": {
+                      "paginationCurrentPage": 1,
+                      "paginationPageSize": 250
+                    }
+                  },
+                  "tableColumnTypeState": {
+                    "names": {
+                      "instanceId_objectType": "string",
+                      "instanceId_objectId": "string",
+                      "count": "string",
+                      "rank": "string"
+                    },
+                    "updated": false
+                  },
+                  "tableOptionSpecHash": "[{\"name\":\"useFilter\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable filter for columns\"},{\"name\":\"showPagination\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable pagination for better navigation\"},{\"name\":\"showAggregationFooter\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable a footer for displaying aggregated values\"}]",
+                  "tableOptionValue": {
+                    "useFilter": false,
+                    "showPagination": false,
+                    "showAggregationFooter": false
+                  },
+                  "updated": false,
+                  "initialized": false
+                },
+                "multiBarChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default"
+                },
+                "lineChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default"
+                },
+                "scatterChart": {
+                  "xAxis": {
+                    "name": "instanceId_objectType",
+                    "index": 0,
+                    "aggr": "sum"
+                  },
+                  "size": {
+                    "name": "count",
+                    "index": 2,
+                    "aggr": "sum"
+                  },
+                  "yAxis": {
+                    "name": "rank",
+                    "index": 3,
+                    "aggr": "sum"
+                  },
+                  "group": {
+                    "name": "instanceId_objectId",
+                    "index": 1,
+                    "aggr": "sum"
+                  }
+                },
+                "stackedAreaChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default"
+                }
+              },
+              "keys": [
+                {
+                  "name": "instanceId_objectType",
+                  "index": 0,
+                  "aggr": "sum"
+                }
+              ],
+              "groups": [],
+              "values": [
+                {
+                  "name": "instanceId_objectId",
+                  "index": 1,
+                  "aggr": "sum"
+                }
+              ],
+              "commonSetting": {}
+            },
+            "helium": {}
+          },
+          "1": {
+            "graph": {
+              "mode": "table",
+              "height": 300,
+              "optionOpen": false,
+              "setting": {
+                "table": {
+                  "tableGridState": {},
+                  "tableColumnTypeState": {
+                    "names": {
+                      "instanceId_userId": "string",
+                      "instanceId_objectType": "string",
+                      "instanceId_objectId": "string",
+                      "audit_pos": "string",
+                      "audit_clientType": "string",
+                      "audit_timestamp": "string",
+                      "audit_timePassed": "string",
+                      "audit_experiment": "string",
+                      "audit_resourceType": "string",
+                      "metadata_ownerId": "string",
+                      "metadata_ownerType": "string",
+                      "metadata_createdAt": "string",
+                      "metadata_authorId": "string",
+                      "metadata_applicationId": "string",
+                      "metadata_numCompanions": "string",
+                      "metadata_numPhotos": "string",
+                      "metadata_numPolls": "string",
+                      "metadata_numSymbols": "string",
+                      "metadata_numTokens": "string",
+                      "metadata_numVideos": "string",
+                      "metadata_platform": "string",
+                      "metadata_totalVideoLength": "string",
+                      "metadata_options": "string",
+                      "relationsMask": "string",
+                      "userOwnerCounters_USER_FEED_REMOVE": "string",
+                      "userOwnerCounters_USER_PROFILE_VIEW": "string",
+                      "userOwnerCounters_VOTE_POLL": "string",
+                      "userOwnerCounters_USER_SEND_MESSAGE": "string",
+                      "userOwnerCounters_USER_DELETE_MESSAGE": "string",
+                      "userOwnerCounters_USER_INTERNAL_LIKE": "string",
+                      "userOwnerCounters_USER_INTERNAL_UNLIKE": "string",
+                      "userOwnerCounters_USER_STATUS_COMMENT_CREATE": "string",
+                      "userOwnerCounters_PHOTO_COMMENT_CREATE": "string",
+                      "userOwnerCounters_MOVIE_COMMENT_CREATE": "string",
+                      "userOwnerCounters_USER_PHOTO_ALBUM_COMMENT_CREATE": "string",
+                      "userOwnerCounters_COMMENT_INTERNAL_LIKE": "string",
+                      "userOwnerCounters_USER_FORUM_MESSAGE_CREATE": "string",
+                      "userOwnerCounters_PHOTO_MARK_CREATE": "string",
+                      "userOwnerCounters_PHOTO_VIEW": "string",
+                      "userOwnerCounters_PHOTO_PIN_BATCH_CREATE": "string",
+                      "userOwnerCounters_PHOTO_PIN_UPDATE": "string",
+                      "userOwnerCounters_USER_PRESENT_SEND": "string",
+                      "userOwnerCounters_UNKNOWN": "string",
+                      "userOwnerCounters_CREATE_TOPIC": "string",
+                      "userOwnerCounters_CREATE_IMAGE": "string",
+                      "userOwnerCounters_CREATE_MOVIE": "string",
+                      "userOwnerCounters_CREATE_COMMENT": "string",
+                      "userOwnerCounters_CREATE_LIKE": "string",
+                      "userOwnerCounters_TEXT": "string",
+                      "userOwnerCounters_IMAGE": "string",
+                      "userOwnerCounters_VIDEO": "string",
+                      "ownerUserCounters_USER_FEED_REMOVE": "string",
+                      "ownerUserCounters_USER_PROFILE_VIEW": "string",
+                      "ownerUserCounters_VOTE_POLL": "string",
+                      "ownerUserCounters_USER_SEND_MESSAGE": "string",
+                      "ownerUserCounters_USER_DELETE_MESSAGE": "string",
+                      "ownerUserCounters_USER_INTERNAL_LIKE": "string",
+                      "ownerUserCounters_USER_INTERNAL_UNLIKE": "string",
+                      "ownerUserCounters_USER_STATUS_COMMENT_CREATE": "string",
+                      "ownerUserCounters_PHOTO_COMMENT_CREATE": "string",
+                      "ownerUserCounters_MOVIE_COMMENT_CREATE": "string",
+                      "ownerUserCounters_USER_PHOTO_ALBUM_COMMENT_CREATE": "string",
+                      "ownerUserCounters_COMMENT_INTERNAL_LIKE": "string",
+                      "ownerUserCounters_USER_FORUM_MESSAGE_CREATE": "string",
+                      "ownerUserCounters_PHOTO_MARK_CREATE": "string",
+                      "ownerUserCounters_PHOTO_VIEW": "string",
+                      "ownerUserCounters_PHOTO_PIN_BATCH_CREATE": "string",
+                      "ownerUserCounters_PHOTO_PIN_UPDATE": "string",
+                      "ownerUserCounters_USER_PRESENT_SEND": "string",
+                      "ownerUserCounters_UNKNOWN": "string",
+                      "ownerUserCounters_CREATE_TOPIC": "string",
+                      "ownerUserCounters_CREATE_IMAGE": "string",
+                      "ownerUserCounters_CREATE_MOVIE": "string",
+                      "ownerUserCounters_CREATE_COMMENT": "string",
+                      "ownerUserCounters_CREATE_LIKE": "string",
+                      "ownerUserCounters_TEXT": "string",
+                      "ownerUserCounters_IMAGE": "string",
+                      "ownerUserCounters_VIDEO": "string",
+                      "membership_status": "string",
+                      "membership_statusUpdateDate": "string",
+                      "membership_joinDate": "string",
+                      "membership_joinRequestDate": "string",
+                      "owner_create_date": "string",
+                      "owner_birth_date": "string",
+                      "owner_gender": "string",
+                      "owner_status": "string",
+                      "owner_ID_country": "string",
+                      "owner_ID_Location": "string",
+                      "owner_is_active": "string",
+                      "owner_is_deleted": "string",
+                      "owner_is_abused": "string",
+                      "owner_is_activated": "string",
+                      "owner_change_datime": "string",
+                      "owner_is_semiactivated": "string",
+                      "owner_region": "string",
+                      "user_create_date": "string",
+                      "user_birth_date": "string",
+                      "user_gender": "string",
+                      "user_status": "string",
+                      "user_ID_country": "string",
+                      "user_ID_Location": "string",
+                      "user_is_active": "string",
+                      "user_is_deleted": "string",
+                      "user_is_abused": "string",
+                      "user_is_activated": "string",
+                      "user_change_datime": "string",
+                      "user_is_semiactivated": "string",
+                      "user_region": "string",
+                      "feedback": "string",
+                      "objectId": "string",
+                      "auditweights_ageMs": "string",
+                      "auditweights_closed": "string",
+                      "auditweights_ctr_gender": "string",
+                      "auditweights_ctr_high": "string",
+                      "auditweights_ctr_negative": "string",
+                      "auditweights_dailyRecency": "string",
+                      "auditweights_feedOwner_RECOMMENDED_GROUP": "string",
+                      "auditweights_feedStats": "string",
+                      "auditweights_friendCommentFeeds": "string",
+                      "auditweights_friendCommenters": "string",
+                      "auditweights_friendLikes": "string",
+                      "auditweights_friendLikes_actors": "string",
+                      "auditweights_hasDetectedText": "string",
+                      "auditweights_hasText": "string",
+                      "auditweights_isPymk": "string",
+                      "auditweights_isRandom": "string",
+                      "auditweights_likersFeedStats_hyper": "string",
+                      "auditweights_likersSvd_prelaunch_hyper": "string",
+                      "auditweights_matrix": "string",
+                      "auditweights_notOriginalPhoto": "string",
+                      "auditweights_numDislikes": "string",
+                      "auditweights_numLikes": "string",
+                      "auditweights_numShows": "string",
+                      "auditweights_onlineVideo": "string",
+                      "auditweights_partAge": "string",
+                      "auditweights_partCtr": "string",
+                      "auditweights_partSvd": "string",
+                      "auditweights_processedVideo": "string",
+                      "auditweights_relationMasks": "string",
+                      "auditweights_source_LIVE_TOP": "string",
+                      "auditweights_source_MOVIE_TOP": "string",
+                      "auditweights_svd_prelaunch": "string",
+                      "auditweights_svd_spark": "string",
+                      "auditweights_userAge": "string",
+                      "auditweights_userOwner_CREATE_COMMENT": "string",
+                      "auditweights_userOwner_CREATE_IMAGE": "string",
+                      "auditweights_userOwner_CREATE_LIKE": "string",
+                      "auditweights_userOwner_IMAGE": "string",
+                      "auditweights_userOwner_MOVIE_COMMENT_CREATE": "string",
+                      "auditweights_userOwner_PHOTO_COMMENT_CREATE": "string",
+                      "auditweights_userOwner_PHOTO_MARK_CREATE": "string",
+                      "auditweights_userOwner_PHOTO_VIEW": "string",
+                      "auditweights_userOwner_TEXT": "string",
+                      "auditweights_userOwner_UNKNOWN": "string",
+                      "auditweights_userOwner_USER_DELETE_MESSAGE": "string",
+                      "auditweights_userOwner_USER_FEED_REMOVE": "string",
+                      "auditweights_userOwner_USER_FORUM_MESSAGE_CREATE": "string",
+                      "auditweights_userOwner_USER_INTERNAL_LIKE": "string",
+                      "auditweights_userOwner_USER_INTERNAL_UNLIKE": "string",
+                      "auditweights_userOwner_USER_PRESENT_SEND": "string",
+                      "auditweights_userOwner_USER_PROFILE_VIEW": "string",
+                      "auditweights_userOwner_USER_SEND_MESSAGE": "string",
+                      "auditweights_userOwner_USER_STATUS_COMMENT_CREATE": "string",
+                      "auditweights_userOwner_VIDEO": "string",
+                      "auditweights_userOwner_VOTE_POLL": "string",
+                      "auditweights_x_ActorsRelations": "string",
+                      "auditweights_likersSvd_spark_hyper": "string",
+                      "auditweights_source_PROMO": "string",
+                      "date": "string"
+                    },
+                    "updated": true
+                  },
+                  "tableOptionSpecHash": "[{\"name\":\"useFilter\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable filter for columns\"},{\"name\":\"showPagination\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable pagination for better navigation\"},{\"name\":\"showAggregationFooter\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable a footer for displaying aggregated values\"}]",
+                  "tableOptionValue": {
+                    "useFilter": false,
+                    "showPagination": false,
+                    "showAggregationFooter": false
+                  },
+                  "updated": false,
+                  "initialized": false
+                }
+              },
+              "commonSetting": {}
+            }
+          }
+        },
+        "enabled": true,
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TABLE",
+            "data": "instanceId_objectType\tinstanceId_objectId\tcount\trank\nVideo\t535842\t1329\t1\nVideo\t1282812\t868\t2\nVideo\t603629\t822\t3\nVideo\t1041333\t633\t4\nVideo\t9458730\t569\t5\nVideo\t1004136\t490\t6\nVideo\t340210\t478\t7\nVideo\t1026913\t432\t8\nVideo\t9469235\t427\t9\nVideo\t790516\t417\t10\nPhoto\t6537034\t215\t1\nPhoto\t7001118\t171\t2\nPhoto\t7474842\t152\t3\nPhoto\t6644424\t145\t4\nPhoto\t1790708\t134\t5\nPhoto\t6276929\t124\t6\nPhoto\t8153427\t100\t7\nPhoto\t2886014\t99\t8\nPhoto\t8550904\t82\t9\nPhoto\t7533932\t79\t10\nPost\t19152905\t689\t1\nPost\t11300713\t660\t2\nPost\t38567725\t568\t3\nPost\t31009524\t560\t4\nPost\t35514331\t544\t5\nPost\t18354936\t528\t6\nPost\t39007803\t506\t7\nPost\t21549312\t476\t8\nPost\t32819707\t467\t9\nPost\t22311315\t465\t10\nPost\t31704618\t465\t10\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://10.9.140.245:4043/jobs/job?id=2",
+              "$$hashKey": "object:134115"
+            },
+            {
+              "jobUrl": "http://10.9.140.245:4043/jobs/job?id=4",
+              "$$hashKey": "object:134116"
+            },
+            {
+              "jobUrl": "http://10.9.140.245:4043/jobs/job?id=5",
+              "$$hashKey": "object:134117"
+            },
+            {
+              "jobUrl": "http://10.9.140.245:4043/jobs/job?id=6",
+              "$$hashKey": "object:134118"
+            },
+            {
+              "jobUrl": "http://10.9.140.245:4043/jobs/job?id=7",
+              "$$hashKey": "object:134119"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1644227739964_1016993128",
+      "id": "paragraph_1644227739964_1016993128",
+      "dateCreated": "2022-02-07T12:55:39+0300",
+      "dateStarted": "2022-02-09T14:27:53+0300",
+      "dateFinished": "2022-02-09T14:28:11+0300",
+      "status": "FINISHED",
+      "$$hashKey": "object:78140"
+    },
+    {
+      "title": "Гистограммы популярности/активности по времени суток",
+      "text": "%spark.sql\n\nSELECT HH24, count AS cnt_likes\n  FROM TableHHActivity \nORDER BY HH24  \n\n",
+      "user": "anonymous",
+      "dateUpdated": "2022-02-10T19:49:01+0300",
+      "progress": 10,
+      "config": {
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/sql",
+        "fontSize": 9,
+        "results": {
+          "0": {
+            "graph": {
+              "mode": "multiBarChart",
+              "height": 300,
+              "optionOpen": false,
+              "setting": {
+                "table": {
+                  "tableGridState": {
+                    "columns": [
+                      {
+                        "name": "audit_timestamp0",
+                        "visible": true,
+                        "width": "*",
+                        "sort": {
+                          "priority": 0,
+                          "direction": "desc"
+                        },
+                        "filters": [
+                          {}
+                        ],
+                        "pinned": ""
+                      }
+                    ],
+                    "scrollFocus": {},
+                    "selection": [],
+                    "grouping": {
+                      "grouping": [],
+                      "aggregations": [],
+                      "rowExpandedStates": {}
+                    },
+                    "treeView": {},
+                    "pagination": {
+                      "paginationCurrentPage": 1,
+                      "paginationPageSize": 250
+                    }
+                  },
+                  "tableColumnTypeState": {
+                    "names": {
+                      "HH24": "string",
+                      "cnt_likes": "string"
+                    },
+                    "updated": false
+                  },
+                  "tableOptionSpecHash": "[{\"name\":\"useFilter\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable filter for columns\"},{\"name\":\"showPagination\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable pagination for better navigation\"},{\"name\":\"showAggregationFooter\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable a footer for displaying aggregated values\"}]",
+                  "tableOptionValue": {
+                    "useFilter": false,
+                    "showPagination": false,
+                    "showAggregationFooter": false
+                  },
+                  "updated": false,
+                  "initialized": false
+                },
+                "multiBarChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default"
+                },
+                "stackedAreaChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default"
+                },
+                "lineChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default"
+                },
+                "scatterChart": {
+                  "xAxis": {
+                    "name": "HH24",
+                    "index": 0,
+                    "aggr": "sum"
+                  },
+                  "yAxis": {
+                    "name": "cnt_likes",
+                    "index": 1,
+                    "aggr": "sum"
+                  },
+                  "group": {
+                    "name": "cnt_likes",
+                    "index": 1,
+                    "aggr": "sum"
+                  },
+                  "size": {
+                    "name": "cnt_likes",
+                    "index": 1,
+                    "aggr": "sum"
+                  }
+                }
+              },
+              "keys": [
+                {
+                  "name": "HH24",
+                  "index": 0,
+                  "aggr": "sum"
+                }
+              ],
+              "groups": [],
+              "values": [
+                {
+                  "name": "cnt_likes",
+                  "index": 1,
+                  "aggr": "sum"
+                }
+              ],
+              "commonSetting": {}
+            },
+            "helium": {}
+          }
+        },
+        "enabled": true,
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TABLE",
+            "data": "HH24\tcnt_likes\n0\t65216\n1\t40591\n2\t32854\n3\t35654\n4\t47631\n5\t65415\n6\t92829\n7\t119202\n8\t141120\n9\t148278\n10\t150529\n11\t151691\n12\t153337\n13\t157624\n14\t161601\n15\t169721\n16\t179310\n17\t192460\n18\t207219\n19\t216801\n20\t216800\n21\t202852\n22\t160212\n23\t111482\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://10.9.140.245:4043/jobs/job?id=292",
+              "$$hashKey": "object:132228"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1644312904080_993041905",
+      "id": "paragraph_1644312904080_993041905",
+      "dateCreated": "2022-02-08T12:35:04+0300",
+      "dateStarted": "2022-02-10T16:10:25+0300",
+      "dateFinished": "2022-02-10T16:10:28+0300",
+      "status": "FINISHED",
+      "$$hashKey": "object:78141"
+    },
+    {
+      "text": "%spark.sql\n\nSELECT col, corr\n  FROM TableCorr ",
+      "user": "anonymous",
+      "dateUpdated": "2022-02-11T16:06:10+0300",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "sql",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/sql",
+        "fontSize": 9,
+        "results": {
+          "0": {
+            "graph": {
+              "mode": "multiBarChart",
+              "height": 300,
+              "optionOpen": false,
+              "setting": {
+                "table": {
+                  "tableGridState": {},
+                  "tableColumnTypeState": {
+                    "names": {
+                      "coд": "string",
+                      "corr": "string"
+                    },
+                    "updated": false
+                  },
+                  "tableOptionSpecHash": "[{\"name\":\"useFilter\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable filter for columns\"},{\"name\":\"showPagination\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable pagination for better navigation\"},{\"name\":\"showAggregationFooter\",\"valueType\":\"boolean\",\"defaultValue\":false,\"widget\":\"checkbox\",\"description\":\"Enable a footer for displaying aggregated values\"}]",
+                  "tableOptionValue": {
+                    "useFilter": false,
+                    "showPagination": false,
+                    "showAggregationFooter": false
+                  },
+                  "updated": false,
+                  "initialized": false
+                },
+                "multiBarChart": {
+                  "rotate": {
+                    "degree": "-45"
+                  },
+                  "xLabelStatus": "default",
+                  "stacked": true
+                }
+              },
+              "commonSetting": {},
+              "keys": [
+                {
+                  "name": "col",
+                  "index": 0,
+                  "aggr": "sum"
+                }
+              ],
+              "groups": [],
+              "values": [
+                {
+                  "name": "corr",
+                  "index": 1,
+                  "aggr": "sum"
+                }
+              ]
+            },
+            "helium": {}
+          }
+        },
+        "enabled": true,
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1644392915685_1874496898",
+      "id": "paragraph_1644392915685_1874496898",
+      "dateCreated": "2022-02-09T10:48:35+0300",
+      "status": "FINISHED",
+      "$$hashKey": "object:78142",
+      "dateFinished": "2022-02-11T16:05:57+0300",
+      "dateStarted": "2022-02-11T16:05:57+0300",
+      "title": "Корреляция признаков с целевой переменной",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TABLE",
+            "data": "col\tcorr\nmetadata_numPhotos\t-0.2790727860929738\nmetadata_numSymbols\t0.3098992044403847\nmetadata_numTokens\t0.3191373581584354\nuserOwnerCounters_UNKNOWN\t0.3333333333333333\nuserOwnerCounters_CREATE_COMMENT\t0.33333333333333337\nuserOwnerCounters_CREATE_LIKE\t0.42864526240716205\nuserOwnerCounters_TEXT\t0.39144427459673736\nuserOwnerCounters_IMAGE\t0.3693954956271015\nuserOwnerCounters_VIDEO\t0.3333333333333333\nuser_birth_date\t-0.19693372633372783\nuser_status\t0.6546536707079771\nuser_ID_Location\t0.4064562976190319\nuser_region\t-0.13259938155939582\nauditweights_ageMs\t0.06133149900094308\nauditweights_ctr_gender\t-0.017727177639603253\nauditweights_ctr_high\t-0.18754954725953626\nauditweights_ctr_negative\t0.4091077112816322\nauditweights_dailyRecency\t-0.0381408108786579\nauditweights_feedOwner_RECOMMENDED_GROUP\t-0.49852749922318595\nauditweights_feedStats\t0.3512966598762968\nauditweights_friendLikes\t2.2662332591841976E-17\nauditweights_friendLikes_actors\t2.2662332591841976E-17\nauditweights_hasText\t-0.33333333333333326\nauditweights_likersFeedStats_hyper\t0.32915456596807596\nauditweights_matrix\t0.16608577039863398\nauditweights_notOriginalPhoto\t0.3333333333333333\nauditweights_numDislikes\t0.2586850409257876\nauditweights_numLikes\t0.14343809133141855\nauditweights_numShows\t0.15454418454754362\nauditweights_svd_spark\t-0.3518992938578672\nauditweights_userAge\t0.19802950859533483\nauditweights_userOwner_CREATE_COMMENT\t0.3333333333333333\nauditweights_userOwner_CREATE_LIKE\t0.49999999934685846\nauditweights_userOwner_IMAGE\t0.4994126730811484\nauditweights_userOwner_TEXT\t0.4999999998918835\nauditweights_likersSvd_spark_hyper\t0.031242822242079797\n"
+          }
+        ]
+      }
+    }
+  ],
+  "name": "month2_homework2_spark",
+  "id": "2GT6PAYFR",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.10.0",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {},
+  "path": "/month2_homework2_spark"
+}
